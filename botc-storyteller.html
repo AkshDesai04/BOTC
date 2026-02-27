@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🩸 Storyteller — Trouble Brewing</title>
+<style>
+  :root {
+    --bg: #0a0a12;
+    --surface: #12121e;
+    --surface2: #1a1a2e;
+    --border: #2a2a3a;
+    --text: #e8e6e3;
+    --text2: #999;
+    --text3: #555;
+    --red: #e74c3c;
+    --darkred: #c0392b;
+    --blue: #5dade2;
+    --darkblue: #1a3a5c;
+    --green: #27ae60;
+    --teal: #48c9b0;
+    --darkteal: #1a4a3a;
+    --orange: #f39c12;
+    --purple: #9b59b6;
+    --indigo: #8888dd;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    min-height: 100vh;
+    overscroll-behavior: none;
+  }
+  button { font-family: inherit; }
+  .header {
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.5);
+    border-bottom: 1px solid rgba(231,76,60,0.25);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .header-title { font-weight:700; font-size:15px; color:var(--red); letter-spacing:0.5px; }
+  .phase-badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .screen { padding: 16px; max-width: 540px; margin: 0 auto; padding-bottom: 100px; }
+  .btn {
+    padding: 12px 18px; border-radius: 10px; border: none;
+    font-weight: 700; font-size: 14px; cursor: pointer; width: 100%;
+    transition: opacity 0.15s;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn-red { background: linear-gradient(135deg, #c0392b, #e74c3c); color: #fff; }
+  .btn-blue { background: linear-gradient(135deg, #1a3a5c, #2980b9); color: #aad4f0; }
+  .btn-night { background: linear-gradient(135deg, #1a1a4a, #2a2a6a); color: #8888dd; }
+  .btn-day { background: linear-gradient(135deg, #4a4a1a, #6a6a2a); color: #dddd66; }
+  .btn-disabled { background: #222; color: #444; cursor: not-allowed; }
+  .btn-sm {
+    padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    cursor: pointer; width: auto; border: none;
+  }
+  .btn-outline {
+    background: none; border: 1px solid var(--border); color: var(--text2);
+    padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  }
+  .input {
+    padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); font-size: 14px; outline: none;
+    width: 100%; font-family: inherit;
+  }
+  .input:focus { border-color: var(--red); }
+  select.input { -webkit-appearance: none; }
+  .card {
+    padding: 12px; border-radius: 10px; margin-bottom: 8px;
+    border: 1px solid var(--border); background: var(--surface);
+  }
+  .player-row {
+    margin-bottom: 5px; border-radius: 10px; overflow: hidden;
+    border: 1px solid; transition: border-color 0.2s;
+  }
+  .player-main {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; cursor: pointer;
+  }
+  .seat-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0; color: #fff;
+  }
+  .player-expand {
+    padding: 8px 12px 12px; border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(0,0,0,0.2);
+  }
+  .tabs {
+    display: flex; border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.2); position: sticky; top: 49px; z-index: 90;
+  }
+  .tab {
+    flex: 1; padding: 10px 8px; background: none; border: none;
+    border-bottom: 2px solid transparent; color: var(--text3);
+    font-size: 12px; cursor: pointer;
+  }
+  .tab.active { border-bottom-color: var(--red); color: var(--red); font-weight: 600; }
+  .status-bar {
+    display: flex; gap: 8px; padding: 8px 16px; font-size: 11px;
+    flex-wrap: wrap; background: rgba(0,0,0,0.15);
+  }
+  .night-step { padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+  .role-chip {
+    padding: 6px 12px; border-radius: 6px; font-size: 12px;
+    cursor: pointer; transition: all 0.15s; border: 1px solid;
+    display: inline-block; margin: 0 4px 4px 0;
+  }
+  .bottom-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 12px 16px; background: rgba(10,10,18,0.95);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex; gap: 8px; backdrop-filter: blur(10px); z-index: 100;
+  }
+  .warn { padding: 6px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+  .warn-red { background: rgba(231,76,60,0.12); color: var(--red); }
+  .warn-orange { background: rgba(243,156,18,0.12); color: var(--orange); }
+  .warn-green { background: rgba(39,174,96,0.12); color: var(--green); }
+  details summary { list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  .counter { display:flex; align-items:center; gap:12px; }
+  .counter-btn {
+    width:40px; height:40px; border-radius:50%; border:1px solid var(--border);
+    background:var(--surface2); color:var(--text); font-size:20px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .counter-btn:active { background: var(--red); }
+  .counter-val { font-size:36px; font-weight:700; color:var(--red); min-width:50px; text-align:center; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .fade-in { animation: fadeIn 0.25s ease-out; }
+  .overlay {
+    position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.85); backdrop-filter:blur(8px);
+  }
+  .overlay-box { text-align:center; padding:40px 32px; border-radius:20px; max-width:340px; width:90%; }
+
+  /* Show card — full screen for showing to player */
+  .show-card-overlay {
+    position:fixed; inset:0; z-index:250; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.92); backdrop-filter:blur(12px); cursor:pointer;
+  }
+  .show-card {
+    text-align:center; padding:48px 32px; border-radius:24px; max-width:340px; width:90%;
+  }
+
+  /* Number/choice buttons for night walker */
+  .choice-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .choice-btn {
+    padding: 10px 16px; border-radius: 10px; border: 2px solid var(--border);
+    background: var(--surface2); color: var(--text); font-size: 16px; font-weight: 700;
+    cursor: pointer; min-width: 52px; text-align: center;
+  }
+  .choice-btn:active { border-color: var(--blue); background: rgba(41,128,185,0.2); }
+  .char-choice-btn {
+    padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600;
+    cursor: pointer; text-align: left; width: 100%;
+  }
+  .char-choice-btn:active { border-color: var(--blue); }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+// GAME DATA — TROUBLE BREWING
+// ══════════════════════════════════════════════════════════════════════════
+
+const DIST = {
+  5:{t:3,o:0,m:1,d:1}, 6:{t:3,o:1,m:1,d:1},
+  7:{t:5,o:0,m:1,d:1}, 8:{t:5,o:1,m:1,d:1}, 9:{t:5,o:2,m:1,d:1},
+  10:{t:7,o:0,m:2,d:1}, 11:{t:7,o:1,m:2,d:1}, 12:{t:7,o:2,m:2,d:1},
+  13:{t:9,o:0,m:3,d:1}, 14:{t:9,o:1,m:3,d:1}, 15:{t:9,o:2,m:3,d:1},
+};
+
+const C = {
+  washerwoman:{id:"washerwoman",name:"Washerwoman",team:"good",type:"townsfolk",fn:33,on:0,
+    ab:"You start knowing that 1 of 2 players is a particular Townsfolk.",
+    fn_r:"Show 2 players. Point to each. Show a Townsfolk character token — one of those 2 players is that character.",on_r:""},
+  librarian:{id:"librarian",name:"Librarian",team:"good",type:"townsfolk",fn:34,on:0,
+    ab:"You start knowing that 1 of 2 players is a particular Outsider. (Or that zero are in play.)",
+    fn_r:"Show 2 players and an Outsider token (one of them is that Outsider). OR show a '0' if no Outsiders in play.",on_r:""},
+  investigator:{id:"investigator",name:"Investigator",team:"good",type:"townsfolk",fn:35,on:0,
+    ab:"You start knowing that 1 of 2 players is a particular Minion.",
+    fn_r:"Show 2 players and a Minion token — one of them is that Minion.",on_r:""},
+  chef:{id:"chef",name:"Chef",team:"good",type:"townsfolk",fn:36,on:0,
+    ab:"You start knowing how many pairs of evil players there are.",
+    fn_r:"Show fingers (0, 1, 2, etc.) for the number of pairs of evil players who are sitting adjacent to each other.",on_r:""},
+  empath:{id:"empath",name:"Empath",team:"good",type:"townsfolk",fn:37,on:52,
+    ab:"Each night, you learn how many of your 2 alive neighbours are evil.",
+    fn_r:"Show fingers (0, 1, or 2) for the number of their alive neighbours who are evil. Skip dead players — count closest alive in each direction.",
+    on_r:"Show fingers (0, 1, or 2) for alive evil neighbours. Skip dead neighbours — count closest alive in each direction."},
+  fortuneteller:{id:"fortuneteller",name:"Fortune Teller",team:"good",type:"townsfolk",fn:38,on:53,
+    ab:"Each night, choose 2 players: you learn if either is a Demon. There is a good player that registers as a Demon to you.",
+    fn_r:"They point at 2 players. Nod YES if either is the Demon (or the Red Herring). Shake NO otherwise. Remember: one good player is the Red Herring for the whole game!",
+    on_r:"They point at 2 players. Nod YES or shake NO. Remember the Red Herring!"},
+  undertaker:{id:"undertaker",name:"Undertaker",team:"good",type:"townsfolk",fn:0,on:51,
+    ab:"Each night*, you learn which character died by execution today.",
+    fn_r:"",
+    on_r:"If a player was executed today, show their CHARACTER token (not the player's claimed role — their actual token). If no execution, do not wake."},
+  monk:{id:"monk",name:"Monk",team:"good",type:"townsfolk",fn:0,on:21,
+    ab:"Each night*, choose a player (not yourself): they are safe from the Demon tonight.",
+    fn_r:"",
+    on_r:"Monk points to a player (NOT themselves). That player cannot be killed by the Demon tonight. Mark them protected."},
+  ravenkeeper:{id:"ravenkeeper",name:"Ravenkeeper",team:"good",type:"townsfolk",fn:0,on:46,
+    ab:"If you die at night, you are woken to choose a player: you learn their character.",
+    fn_r:"",
+    on_r:"ONLY if the Ravenkeeper died TONIGHT: wake them. They point at any player. Show that player's character token."},
+  virgin:{id:"virgin",name:"Virgin",team:"good",type:"townsfolk",fn:0,on:0,
+    ab:"The 1st time you are nominated, if the nominator is a Townsfolk, they are executed immediately.",fn_r:"",on_r:""},
+  slayer:{id:"slayer",name:"Slayer",team:"good",type:"townsfolk",fn:0,on:0,
+    ab:"Once per game, during the day, publicly choose a player: if they are the Demon, they die.",fn_r:"",on_r:""},
+  soldier:{id:"soldier",name:"Soldier",team:"good",type:"townsfolk",fn:0,on:0,
+    ab:"You are safe from the Demon.",fn_r:"",on_r:""},
+  mayor:{id:"mayor",name:"Mayor",team:"good",type:"townsfolk",fn:0,on:0,
+    ab:"If only 3 players live & no execution occurs, your team wins. If you die at night, another player might die instead.",fn_r:"",on_r:""},
+  butler:{id:"butler",name:"Butler",team:"good",type:"outsider",fn:39,on:54,
+    ab:"Each night, choose a player (not yourself): tomorrow, you may only vote if they are voting too.",
+    fn_r:"Butler points to a player (NOT themselves). That player is their Master. Tomorrow, Butler may only vote if their Master is also voting.",
+    on_r:"Butler points to a player (NOT themselves). That is their new Master."},
+  drunk:{id:"drunk",name:"Drunk",team:"good",type:"outsider",fn:0,on:0,setup:true,
+    ab:"You do not know you are the Drunk. You think you are a Townsfolk, but you are not.",fn_r:"",on_r:""},
+  recluse:{id:"recluse",name:"Recluse",team:"good",type:"outsider",fn:0,on:0,
+    ab:"You might register as evil & as a Minion or Demon, even if dead.",fn_r:"",on_r:""},
+  saint:{id:"saint",name:"Saint",team:"good",type:"outsider",fn:0,on:0,
+    ab:"If you die by execution, your team loses.",fn_r:"",on_r:""},
+  poisoner:{id:"poisoner",name:"Poisoner",team:"evil",type:"minion",fn:17,on:7,
+    ab:"Each night, choose a player: they are poisoned tonight and tomorrow day.",
+    fn_r:"Poisoner points to a player. That player is poisoned tonight and all of tomorrow day. Mark them poisoned.",
+    on_r:"Clear previous poison first. Poisoner points to a new target. That player is poisoned tonight and tomorrow day."},
+  spy:{id:"spy",name:"Spy",team:"evil",type:"minion",fn:18,on:22,
+    ab:"Each night, you see the Grimoire. You might register as good & as a Townsfolk or Outsider, even if dead.",
+    fn_r:"Show the Spy the Grimoire (your phone screen with all roles visible) for as long as they need.",
+    on_r:"Show the Spy the Grimoire for as long as they need."},
+  scarletwoman:{id:"scarletwoman",name:"Scarlet Woman",team:"evil",type:"minion",fn:0,on:25,
+    ab:"If there are 5 or more players alive & the Demon dies, you become the Demon.",fn_r:"",
+    on_r:"ONLY if the Demon died today AND 5+ players are still alive: wake the Scarlet Woman. Show 'You are' then show the Imp token. She is now the Demon."},
+  baron:{id:"baron",name:"Baron",team:"evil",type:"minion",fn:0,on:0,setup:true,
+    ab:"There are extra Outsiders in play. [+2 Outsiders]",fn_r:"",on_r:""},
+  imp:{id:"imp",name:"Imp",team:"evil",type:"demon",fn:0,on:30,
+    ab:"Each night*, choose a player: they die. If you kill yourself this way, a Minion becomes the Imp.",fn_r:"",
+    on_r:"Imp points to a player — that player DIES (mark dead). EXCEPTION: If Imp points to THEMSELVES: Imp dies, YOU choose an alive Minion to become the new Imp. Wake that Minion and show 'You are the Imp'. Also: Soldier is safe; Monk-protected player is safe (nobody dies instead, unless Mayor is in play)."},
+};
+
+const FIRST_NIGHT = [
+  {id:"_minioninfo",order:10,title:"🤝 Minion Info"},
+  {id:"_demoninfo",order:11,title:"😈 Demon Info"},
+  {id:"poisoner",order:17},{id:"spy",order:18},
+  {id:"washerwoman",order:33},{id:"librarian",order:34},{id:"investigator",order:35},
+  {id:"chef",order:36},{id:"empath",order:37},{id:"fortuneteller",order:38},{id:"butler",order:39},
+];
+const OTHER_NIGHT = [
+  {id:"poisoner",order:7},{id:"monk",order:21},{id:"spy",order:22},
+  {id:"scarletwoman",order:25},{id:"imp",order:30},{id:"ravenkeeper",order:46},
+  {id:"undertaker",order:51},{id:"empath",order:52},{id:"fortuneteller",order:53},{id:"butler",order:54},
+];
+
+const TYPE_CLR = {
+  townsfolk:{bg:"#0e2540",bdr:"#2980b9",txt:"#5dade2"},
+  outsider:{bg:"#0e3a2a",bdr:"#1abc9c",txt:"#48c9b0"},
+  minion:{bg:"#3a0e0e",bdr:"#c0392b",txt:"#e74c3c"},
+  demon:{bg:"#4a0e24",bdr:"#e74c3c",txt:"#ff6b6b"},
+};
+const TEMOJI = {townsfolk:"🏘️",outsider:"🌿",minion:"🗡️",demon:"👹"};
+
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+// ══════════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════════
+let state = {
+  screen: "count",
+  playerCount: 10,
+  names: [],
+  nameInput: "",
+  selTF:[], selOS:[], selMN:[], selDM:["imp"],
+  drunkAs: "",
+  gs: null,
+  tab: "grimoire",
+  expandedPlayer: -1,
+  nightStep: 0,
+  winMsg: null,
+  undoStack: [],
+  showConfirm: null,
+  showResume: false,
+  // CHANGE 1: Show roles phase
+  showingRoleFor: -1, // player index for fullscreen role card
+  // CHANGE 2: Night show-card overlay
+  showCard: null, // {type, title, emoji, text, color, borderColor} — fullscreen card
+  // CHANGE 3: Imp starpass picker
+  impStarpassPicker: false, // show picker for which minion becomes Imp
+  impDyingIndex: -1, // which player (Imp) just died
+};
+
+function setState(updates) {
+  Object.assign(state, updates);
+  saveToStorage();
+  render();
+}
+
+// ── LOCAL STORAGE ────────────────────────────────────────────────────
+const SAVE_KEY = "botc_storyteller_save";
+function saveToStorage() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      screen:state.screen, playerCount:state.playerCount, names:state.names,
+      selTF:state.selTF, selOS:state.selOS, selMN:state.selMN, selDM:state.selDM,
+      drunkAs:state.drunkAs, gs:state.gs, tab:state.tab, nightStep:state.nightStep,
+      undoStack:state.undoStack, _saved:Date.now(),
+    }));
+  } catch(e) {}
+}
+function loadFromStorage() {
+  try { const r=localStorage.getItem(SAVE_KEY); return r?JSON.parse(r):null; } catch(e){return null;}
+}
+function clearSave() { try{localStorage.removeItem(SAVE_KEY);}catch(e){} }
+function resumeGame() {
+  const saved = loadFromStorage();
+  if (!saved) return;
+  Object.assign(state, {
+    screen:saved.screen, playerCount:saved.playerCount, names:saved.names||[],
+    selTF:saved.selTF||[], selOS:saved.selOS||[], selMN:saved.selMN||[], selDM:saved.selDM||["imp"],
+    drunkAs:saved.drunkAs||"", gs:saved.gs, tab:saved.tab||"grimoire",
+    nightStep:saved.nightStep||0, undoStack:saved.undoStack||[],
+    showResume:false, expandedPlayer:-1, winMsg:null, showConfirm:null,
+    showingRoleFor:-1, showCard:null, impStarpassPicker:false,
+  });
+  render();
+}
+function newGame() {
+  clearSave();
+  state = {
+    screen:"count", playerCount:10, names:[], nameInput:"",
+    selTF:[], selOS:[], selMN:[], selDM:["imp"], drunkAs:"",
+    gs:null, tab:"grimoire", expandedPlayer:-1, nightStep:0,
+    winMsg:null, undoStack:[], showConfirm:null, showResume:false,
+    showingRoleFor:-1, showCard:null, impStarpassPicker:false, impDyingIndex:-1,
+  };
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════════════════
+function render() {
+  const app = document.getElementById("app");
+  let html = renderHeader();
+  switch(state.screen) {
+    case "count": html += renderCountScreen(); break;
+    case "names": html += renderNamesScreen(); break;
+    case "roles": html += renderRolesScreen(); break;
+    case "showroles": html += renderShowRolesScreen(); break; // CHANGE 1
+    case "game": html += renderGameScreen(); break;
+  }
+  // Resume prompt
+  if (state.showResume) {
+    const saved = loadFromStorage();
+    const when = saved?._saved ? new Date(saved._saved).toLocaleString() : "unknown";
+    const phase = saved?.gs ? `${saved.gs.phase==="night"?"🌙 Night":"☀️ Day"} ${saved.gs.dayNum}` : "";
+    const pCount = saved?.gs?.players?.length || saved?.playerCount || "?";
+    html += `<div class="overlay" style="z-index:220">
+      <div class="overlay-box" style="background:#1a1a2e;border:2px solid var(--blue)">
+        <div style="font-size:36px;margin-bottom:12px">💾</div>
+        <div style="font-size:18px;font-weight:700;color:var(--blue);margin-bottom:8px">Saved Game Found</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:4px">Last saved: ${when}</div>
+        ${saved?.gs?`<div style="font-size:13px;color:var(--text2);margin-bottom:4px">${phase} • ${pCount} players</div>`
+          :`<div style="font-size:13px;color:var(--text2);margin-bottom:4px">Setup in progress • ${pCount} players</div>`}
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn" style="flex:1;padding:10px;background:#222;color:var(--text2);border:1px solid #333;font-size:13px" onclick="newGame()">New Game</button>
+          <button class="btn btn-blue" style="flex:1;padding:10px;font-size:13px" onclick="resumeGame()">Resume</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  // Show card overlay (CHANGE 2)
+  if (state.showCard) {
+    const sc = state.showCard;
+    html += `<div class="show-card-overlay" onclick="setState({showCard:null})">
+      <div class="show-card" style="background:${sc.bg||'#111'};border:3px solid ${sc.borderColor||'#444'}">
+        <div style="font-size:64px;margin-bottom:16px">${sc.emoji||''}</div>
+        <div style="font-size:${sc.fontSize||'28'}px;font-weight:700;color:${sc.color||'#fff'};margin-bottom:8px">${sc.title||''}</div>
+        ${sc.subtitle?`<div style="font-size:14px;color:var(--text2);margin-bottom:12px">${sc.subtitle}</div>`:''}
+        ${sc.text?`<div style="font-size:15px;color:#ccc;line-height:1.5;padding:12px;background:rgba(0,0,0,0.3);border-radius:10px">${sc.text}</div>`:''}
+        <div style="font-size:11px;color:var(--text3);margin-top:16px">tap anywhere to dismiss</div>
+      </div>
+    </div>`;
+  }
+  // Show role for player (CHANGE 1)
+  if (state.showingRoleFor >= 0 && state.gs) {
+    const p = state.gs.players[state.showingRoleFor];
+    const ch = C[p.actual];
+    const bch = C[p.believed];
+    const showCh = p.actual==="drunk" ? bch : ch;
+    const clr = TYPE_CLR[showCh?.type||"townsfolk"];
+    html += `<div class="show-card-overlay" onclick="setState({showingRoleFor:-1})">
+      <div class="show-card" style="background:linear-gradient(135deg,#0d0d1a,${clr.bg});border:3px solid ${clr.bdr}">
+        <div style="font-size:64px;margin-bottom:12px">${TEMOJI[showCh?.type||"townsfolk"]}</div>
+        <div style="font-size:13px;color:var(--text3);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px">${(showCh?.type||"").toUpperCase()}</div>
+        <div style="font-size:28px;font-weight:700;color:${clr.txt};margin-bottom:16px">${showCh?.name||''}</div>
+        <div style="font-size:14px;color:#ccc;line-height:1.6;padding:12px 16px;background:rgba(0,0,0,0.3);border-radius:10px">${esc(showCh?.ab||'')}</div>
+        ${ch?.team==="evil"?`<div style="margin-top:12px;padding:6px 16px;background:rgba(231,76,60,0.2);border-radius:8px;font-size:13px;color:var(--red);font-weight:700">😈 YOU ARE EVIL</div>`:''}
+        <div style="font-size:11px;color:var(--text3);margin-top:16px">tap anywhere to dismiss</div>
+      </div>
+    </div>`;
+  }
+  // Imp starpass picker (CHANGE 3)
+  if (state.impStarpassPicker && state.gs) {
+    const aliveMinions = state.gs.players.map((p,i)=>({...p,i})).filter(p=>p.alive && C[p.actual]?.type==="minion");
+    let minionBtns = "";
+    aliveMinions.forEach(m => {
+      minionBtns += `<button class="btn" style="margin-bottom:8px;padding:10px;background:${TYPE_CLR.minion.bg};border:1px solid ${TYPE_CLR.minion.bdr};color:${TYPE_CLR.minion.txt};font-size:14px" onclick="doImpStarpass(${m.i})">${esc(m.name)} (${C[m.actual]?.name})</button>`;
+    });
+    if (aliveMinions.length === 0) {
+      minionBtns = `<div style="color:var(--text3);padding:12px">No alive Minions — no starpass possible.</div>
+        <button class="btn btn-red" style="padding:10px;font-size:13px" onclick="setState({impStarpassPicker:false})">OK</button>`;
+    }
+    html += `<div class="overlay" style="z-index:210">
+      <div class="overlay-box" style="background:#1a1a2e;border:2px solid var(--red)">
+        <div style="font-size:36px;margin-bottom:8px">👹</div>
+        <div style="font-size:16px;font-weight:700;color:var(--red);margin-bottom:4px">Imp Starpass!</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">The Imp killed themselves. Which alive Minion becomes the new Imp?</div>
+        ${minionBtns}
+      </div>
+    </div>`;
+  }
+  app.innerHTML = html;
+}
+
+function renderHeader() {
+  let badge = "";
+  if (state.gs) {
+    const isNight = state.gs.phase === "night";
+    badge = `<div class="phase-badge" style="background:${isNight?"#1a1a3a":"#3a3a1a"};border:1px solid ${isNight?"#4a4a8a":"#8a8a4a"};color:${isNight?"#8888dd":"#cccc44"}">
+      ${isNight?"🌙":"☀️"} ${isNight?"Night":"Day"} ${state.gs.dayNum}
+    </div>`;
+  }
+  let newGameBtn = "";
+  if (state.screen === "game" || state.screen === "showroles") {
+    newGameBtn = `<button class="btn-outline" style="font-size:11px;padding:4px 8px;color:var(--red);border-color:var(--red)" onclick="if(confirm('Start a completely new game? Current game will be lost.'))newGame()">New Game</button>`;
+  }
+  return `<div class="header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:20px">🩸</span>
+      <span class="header-title">STORYTELLER</span>
+      ${newGameBtn}
+    </div>
+    ${badge}
+  </div>`;
+}
+
+// ── COUNT SCREEN ─────────────────────────────────────────────────────
+function renderCountScreen() {
+  const d = DIST[state.playerCount];
+  return `<div class="screen fade-in" style="text-align:center;padding-top:40px">
+    <h2 style="color:var(--red);margin-bottom:4px;font-size:20px">Trouble Brewing</h2>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:32px">How many players? (5–15, not counting Storyteller)</p>
+    <div class="counter" style="justify-content:center;margin-bottom:24px">
+      <button class="counter-btn" onclick="adjCount(-1)">−</button>
+      <div class="counter-val">${state.playerCount}</div>
+      <button class="counter-btn" onclick="adjCount(1)">+</button>
+    </div>
+    <div class="card" style="text-align:left;margin-bottom:24px">
+      <div style="font-weight:600;margin-bottom:6px;font-size:13px;color:var(--text2)">Role Distribution:</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:13px">
+        <span style="color:${TYPE_CLR.townsfolk.txt}">🏘️ ${d.t} Townsfolk</span>
+        <span style="color:${TYPE_CLR.outsider.txt}">🌿 ${d.o} Outsiders</span>
+        <span style="color:${TYPE_CLR.minion.txt}">🗡️ ${d.m} Minions</span>
+        <span style="color:${TYPE_CLR.demon.txt}">👹 ${d.d} Demon</span>
+      </div>
+    </div>
+    <button class="btn btn-red" onclick="goToNames()">Enter Player Names →</button>
+  </div>`;
+}
+function adjCount(d){let v=state.playerCount+d;if(v<5)v=5;if(v>15)v=15;setState({playerCount:v,names:state.names.slice(0,v)});}
+function goToNames(){setState({screen:"names"});}
+
+// ── NAMES SCREEN ─────────────────────────────────────────────────────
+function renderNamesScreen() {
+  const count = state.playerCount;
+  const names = state.names;
+  let list = "";
+  names.forEach((n,i) => {
+    list += `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:4px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
+      <span style="width:24px;height:24px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</span>
+      <span style="flex:1;font-weight:500">${esc(n)}</span>
+      <button class="btn-outline" style="padding:2px 6px;font-size:12px" onclick="moveName(${i},-1)" ${i===0?"disabled":""}>↑</button>
+      <button class="btn-outline" style="padding:2px 6px;font-size:12px" onclick="moveName(${i},1)" ${i===names.length-1?"disabled":""}>↓</button>
+      <button class="btn-outline" style="padding:2px 6px;font-size:12px;color:var(--red);border-color:var(--red)" onclick="removeName(${i})">✕</button>
+    </div>`;
+  });
+  const canProceed = names.length === count;
+  return `<div class="screen fade-in">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <h2 style="font-size:18px;color:var(--red)">Player Names</h2>
+        <p style="color:var(--text2);font-size:12px">${names.length}/${count} — clockwise seating order</p>
+      </div>
+      <button class="btn-outline" onclick="setState({screen:'count'})">← Back</button>
+    </div>
+    ${names.length < count ? `<div style="display:flex;gap:8px;margin-bottom:16px">
+      <input class="input" id="nameInput" placeholder="Player name..." value="${esc(state.nameInput)}"
+        onkeydown="if(event.key==='Enter')addName()" oninput="state.nameInput=this.value" style="flex:1">
+      <button class="btn btn-red" style="width:auto;padding:10px 18px" onclick="addName()">Add</button>
+    </div>` : ""}
+    <div style="margin-bottom:16px">${list || '<div style="text-align:center;padding:20px;color:var(--text3)">No players added yet</div>'}</div>
+    <button class="btn ${canProceed?"btn-red":"btn-disabled"}" ${canProceed?"":"disabled"} onclick="goToRoles()">
+      ${canProceed ? "Select Roles →" : `Add ${count - names.length} more player${count-names.length>1?"s":""}`}
+    </button>
+  </div>`;
+}
+function addName(){const n=state.nameInput.trim();if(!n||state.names.length>=state.playerCount)return;if(state.names.find(x=>x.toLowerCase()===n.toLowerCase()))return;setState({names:[...state.names,n],nameInput:""});setTimeout(()=>{const el=document.getElementById("nameInput");if(el)el.focus();},50);}
+function removeName(i){const a=[...state.names];a.splice(i,1);setState({names:a});}
+function moveName(i,d){const a=[...state.names];const t=i+d;if(t<0||t>=a.length)return;[a[i],a[t]]=[a[t],a[i]];setState({names:a});}
+function goToRoles(){setState({screen:"roles",selTF:[],selOS:[],selMN:[],selDM:["imp"],drunkAs:""});}
+
+// ── ROLES SCREEN ─────────────────────────────────────────────────────
+function renderRolesScreen() {
+  const count = state.playerCount;
+  const baseDist = DIST[count];
+  const hasBaron = state.selMN.includes("baron");
+  const adj = { t:baseDist.t+(hasBaron?-2:0), o:baseDist.o+(hasBaron?2:0), m:baseDist.m, d:baseDist.d };
+  const townsfolk = Object.values(C).filter(c=>c.type==="townsfolk");
+  const outsiders = Object.values(C).filter(c=>c.type==="outsider");
+  const minions = Object.values(C).filter(c=>c.type==="minion");
+
+  function chipSection(title, chars, sel, key, needed) {
+    const clr = TYPE_CLR[key==="selMN"?"minion":key==="selOS"?"outsider":"townsfolk"];
+    const ok = sel.length === needed;
+    let chips = "";
+    chars.forEach(c => {
+      const on = sel.includes(c.id);
+      chips += `<span class="role-chip" onclick="toggleRole('${key}','${c.id}')"
+        style="border-color:${on?clr.bdr:"#333"};background:${on?clr.bg:"rgba(0,0,0,0.3)"};color:${on?clr.txt:"#666"};font-weight:${on?600:400}">${c.name}</span>`;
+    });
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:600;color:${clr.txt};font-size:14px">${title}</span>
+        <span style="font-size:12px;padding:2px 8px;border-radius:10px;font-weight:600;background:${ok?"rgba(39,174,96,0.2)":"rgba(231,76,60,0.2)"};color:${ok?"var(--green)":"var(--red)"}">${sel.length}/${needed}</span>
+      </div>
+      <div>${chips}</div>
+    </div>`;
+  }
+
+  const hasDrunk = state.selOS.includes("drunk");
+  const availDrunkTF = townsfolk.filter(t => !state.selTF.includes(t.id));
+  let drunkPicker = "";
+  if (hasDrunk) {
+    let opts = '<option value="">Select a Townsfolk...</option>';
+    availDrunkTF.forEach(c => { opts += `<option value="${c.id}" ${state.drunkAs===c.id?"selected":""}>${c.name}</option>`; });
+    drunkPicker = `<div class="card" style="border-color:rgba(26,188,156,0.3);background:rgba(26,74,58,0.2);margin-bottom:16px">
+      <div style="font-weight:600;font-size:13px;color:var(--teal);margin-bottom:8px">🍺 The Drunk believes they are:</div>
+      <select class="input" onchange="setState({drunkAs:this.value})">${opts}</select>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">This Townsfolk goes in the bag. The player will think they ARE this Townsfolk.</div>
+    </div>`;
+  }
+
+  const canProceed = state.selTF.length===adj.t && state.selOS.length===adj.o && state.selMN.length===adj.m && (!hasDrunk||state.drunkAs);
+
+  return `<div class="screen fade-in">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <h2 style="font-size:18px;color:var(--red)">Select Roles</h2>
+        <p style="color:var(--text2);font-size:12px">${count} players${hasBaron?" (Baron: +2 Outsiders, −2 Townsfolk)":""}</p>
+      </div>
+      <button class="btn-outline" onclick="setState({screen:'names'})">← Back</button>
+    </div>
+    <button class="btn btn-blue" style="margin-bottom:16px;font-size:13px" onclick="randomizeRoles()">🎲 Randomize All Roles</button>
+    ${chipSection("Townsfolk", townsfolk, state.selTF, "selTF", adj.t)}
+    ${chipSection("Outsiders", outsiders, state.selOS, "selOS", adj.o)}
+    ${chipSection("Minions", minions, state.selMN, "selMN", adj.m)}
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:600;color:${TYPE_CLR.demon.txt};font-size:14px">Demon</span>
+        <span style="font-size:12px;padding:2px 8px;border-radius:10px;font-weight:600;background:rgba(39,174,96,0.2);color:var(--green)">1/1</span>
+      </div>
+      <span class="role-chip" style="border-color:${TYPE_CLR.demon.bdr};background:${TYPE_CLR.demon.bg};color:${TYPE_CLR.demon.txt};font-weight:600;cursor:default">Imp</span>
+    </div>
+    ${drunkPicker}
+    <button class="btn ${canProceed?"btn-red":"btn-disabled"}" ${canProceed?"":"disabled"} onclick="startGame()">
+      ${canProceed?"🩸 Assign Roles & Start Game":"Select correct number of each role"}
+    </button>
+  </div>`;
+}
+function toggleRole(key, id){const arr=[...state[key]];const idx=arr.indexOf(id);if(idx>=0)arr.splice(idx,1);else arr.push(id);const upd={};upd[key]=arr;setState(upd);}
+function randomizeRoles(){
+  const count=state.playerCount;const baseDist=DIST[count];
+  const allTF=Object.values(C).filter(c=>c.type==="townsfolk").map(c=>c.id);
+  const allOS=Object.values(C).filter(c=>c.type==="outsider").map(c=>c.id);
+  const allMN=Object.values(C).filter(c=>c.type==="minion").map(c=>c.id);
+  const pickedMN=shuffle(allMN).slice(0,baseDist.m);
+  const hasBaron=pickedMN.includes("baron");
+  const pickedOS=shuffle(allOS).slice(0,baseDist.o+(hasBaron?2:0));
+  const pickedTF=shuffle(allTF).slice(0,baseDist.t+(hasBaron?-2:0));
+  let drunkAs="";
+  if(pickedOS.includes("drunk")){const r=allTF.filter(id=>!pickedTF.includes(id));if(r.length>0)drunkAs=shuffle(r)[0];}
+  setState({selTF:pickedTF,selOS:pickedOS,selMN:pickedMN,selDM:["imp"],drunkAs});
+}
+
+function startGame() {
+  const hasDrunk = state.selOS.includes("drunk");
+  const pool = [...state.selTF, ...state.selOS.filter(id=>id!=="drunk"), ...state.selMN, "imp"];
+  if (hasDrunk) pool.push("drunk");
+  const shuffled = shuffle(pool);
+  const players = state.names.map((name, i) => {
+    const roleId = shuffled[i];
+    return {
+      name, seat:i+1, actual:roleId,
+      believed: roleId==="drunk" ? state.drunkAs : roleId,
+      alive:true, ghostVote:false, ghostUsed:false,
+      poisoned:false, protected:false, notes:"",
+      abilityUsed:false, master:null,
+    };
+  });
+  const goodInPlay = [...state.selTF, ...state.selOS];
+  if (hasDrunk && state.drunkAs) goodInPlay.push(state.drunkAs);
+  const allGood = Object.values(C).filter(c=>c.team==="good").map(c=>c.id);
+  const notInPlay = allGood.filter(id => !goodInPlay.includes(id));
+  const bluffs = shuffle(notInPlay).slice(0, 3);
+
+  // CHANGE 1: Go to showroles screen first, not directly to game
+  // Pick a random Red Herring (good player for Fortune Teller)
+  const hasFT = state.selTF.includes("fortuneteller") || (hasDrunk && state.drunkAs === "fortuneteller");
+  const goodPlayers = players.filter(p => C[p.actual]?.team === "good");
+  const redHerring = hasFT && goodPlayers.length > 0
+    ? goodPlayers[Math.floor(Math.random() * goodPlayers.length)].seat - 1
+    : -1;
+
+  setState({
+    screen: "showroles",
+    gs: {
+      players, phase:"night", dayNum:1, isFirstNight:true,
+      executedToday:null, diedTonight:[], bluffs, log:[],
+      drunkAs: hasDrunk ? state.drunkAs : null,
+      nightKillDone: false,
+      redHerring: redHerring, // player index (-1 if no FT)
+    },
+    tab:"grimoire", expandedPlayer:-1, nightStep:0, winMsg:null,
+    showingRoleFor:-1, showCard:null,
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CHANGE 1: SHOW ROLES SCREEN
+// ══════════════════════════════════════════════════════════════════════════
+function renderShowRolesScreen() {
+  const gs = state.gs;
+  let html = `<div class="screen fade-in">
+    <h2 style="font-size:18px;color:var(--red);margin-bottom:4px">🎭 Show Role Cards</h2>
+    <p style="color:var(--text2);font-size:12px;margin-bottom:16px">Tap each player to show them their role privately. Drunk sees their believed Townsfolk.</p>`;
+
+  // Red Herring picker (if Fortune Teller is in play)
+  const hasFT = gs.players.some(p => p.actual==="fortuneteller" || (p.actual==="drunk" && p.believed==="fortuneteller"));
+  if (hasFT) {
+    const goodPlayers = gs.players.map((p,i)=>({...p,i})).filter(p=>C[p.actual]?.team==="good");
+    let rhOpts = "";
+    goodPlayers.forEach(p => {
+      rhOpts += `<option value="${p.i}" ${gs.redHerring===p.i?"selected":""}>${p.name} (Seat ${p.i+1} — ${C[p.actual]?.name}${p.actual==="drunk"?" / Drunk":""})</option>`;
+    });
+    html += `<div class="card" style="border-color:rgba(231,76,60,0.3);background:rgba(90,26,26,0.15);margin-bottom:16px">
+      <div style="font-weight:600;font-size:13px;color:var(--red);margin-bottom:6px">🎯 Fortune Teller — Red Herring</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">This good player always registers as the Demon to the Fortune Teller. Persists all game.</div>
+      <select class="input" onchange="setRedHerring(parseInt(this.value))">${rhOpts}</select>
+    </div>`;
+  }
+
+  gs.players.forEach((p, i) => {
+    const ch = C[p.actual];
+    const showCh = p.actual==="drunk" ? C[p.believed] : ch;
+    const clr = TYPE_CLR[showCh?.type||"townsfolk"];
+    html += `<div onclick="setState({showingRoleFor:${i}})" style="padding:12px;margin-bottom:6px;border-radius:10px;border:1px solid ${clr.bdr}44;background:${clr.bg}44;cursor:pointer;display:flex;align-items:center;gap:10px">
+      <span class="seat-num" style="background:${clr.bdr}">${i+1}</span>
+      <span style="flex:1;font-weight:600;font-size:14px">${esc(p.name)}</span>
+      <span style="font-size:20px">${TEMOJI[showCh?.type||"townsfolk"]}</span>
+      <span style="color:var(--text3);font-size:14px">👁️</span>
+    </div>`;
+  });
+
+  html += `<div style="margin-top:20px">
+    <button class="btn btn-night" onclick="setState({screen:'game'})">✅ All Shown — Begin Night 1</button>
+  </div></div>`;
+  return html;
+}
+
+function setRedHerring(idx) {
+  const gs = deepCopy(state.gs);
+  gs.redHerring = idx;
+  setState({gs});
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// GAME SCREEN
+// ══════════════════════════════════════════════════════════════════════════
+function renderGameScreen() {
+  const gs = state.gs;
+  const alive = gs.players.filter(p=>p.alive).length;
+  const majority = Math.ceil(alive/2);
+  const ghostsLeft = gs.players.filter(p=>!p.alive && p.ghostVote && !p.ghostUsed).length;
+
+  let tabs = "";
+  [{id:"grimoire",l:"📖 Grimoire"},{id:"night",l:"🌙 Night"},{id:"roles",l:"🎭 Roles"},{id:"log",l:"📝 Log"}].forEach(t => {
+    tabs += `<button class="tab ${state.tab===t.id?"active":""}" onclick="setState({tab:'${t.id}'})">${t.l}</button>`;
+  });
+
+  let content = "";
+  switch(state.tab) {
+    case "grimoire": content = renderGrimoire(); break;
+    case "night": content = renderNightWalker(); break;
+    case "roles": content = renderRolesRef(); break;
+    case "log": content = renderLog(); break;
+  }
+
+  // Bottom bar
+  const hasUndo = state.undoStack.length > 0;
+  const undoBtn = hasUndo ? `<button class="btn" style="width:auto;padding:12px 14px;background:#2a1a1a;color:var(--orange);border:1px solid #4a2a1a;font-size:18px;border-radius:10px" onclick="undoPhase()" title="Undo">↩</button>` : "";
+  let bottomBtns = "";
+  if (gs.phase === "day") {
+    const nextN = gs.dayNum + 1;
+    bottomBtns = `${undoBtn}<button class="btn btn-night" style="flex:1" onclick="confirmPhase('goNight','Advance to Night ${nextN}? Make sure all day actions are complete.')">🌙 Begin Night ${nextN}</button>`;
+  } else {
+    bottomBtns = `${undoBtn}
+      <button class="btn btn-night" style="flex:1" onclick="setState({tab:'night'})">🌙 Night Walker</button>
+      <button class="btn btn-day" style="flex:1" onclick="confirmPhase('goDay','Advance to Day? Make sure all night steps are complete.')">☀️ Dawn</button>`;
+  }
+
+  // Win overlay
+  let winOverlay = "";
+  if (state.winMsg) {
+    winOverlay = `<div class="overlay" onclick="setState({winMsg:null})">
+      <div class="overlay-box" style="background:${state.winMsg.team==='good'?'#0e2540':'#3a0e0e'};border:2px solid ${state.winMsg.team==='good'?'#2980b9':'#e74c3c'}">
+        <div style="font-size:48px;margin-bottom:12px">${state.winMsg.team==='good'?'😇':'😈'}</div>
+        <div style="font-size:24px;font-weight:700;color:${state.winMsg.team==='good'?'#5dade2':'#e74c3c'};margin-bottom:8px">${state.winMsg.team==='good'?'GOOD':'EVIL'} WINS!</div>
+        <div style="font-size:14px;color:var(--text2);margin-bottom:16px">${state.winMsg.reason}</div>
+        <div style="font-size:12px;color:var(--text3)">Tap to dismiss</div>
+      </div>
+    </div>`;
+  }
+
+  // Confirm dialog
+  let confirmOverlay = "";
+  if (state.showConfirm) {
+    confirmOverlay = `<div class="overlay" style="z-index:210">
+      <div class="overlay-box" style="background:#1a1a2e;border:2px solid var(--orange);max-width:320px">
+        <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:15px;font-weight:600;color:var(--orange);margin-bottom:12px">${state.showConfirm.msg}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" style="flex:1;padding:10px;background:#222;color:var(--text2);border:1px solid #333;font-size:13px" onclick="setState({showConfirm:null})">Cancel</button>
+          <button class="btn btn-red" style="flex:1;padding:10px;font-size:13px" onclick="${state.showConfirm.action}()">Confirm</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="tabs">${tabs}</div>
+    <div class="status-bar">
+      <span style="color:var(--green)">👤 ${alive}</span>
+      <span style="color:var(--red)">💀 ${gs.players.length - alive}</span>
+      <span style="color:var(--orange)">🗳️ Majority: ${majority}</span>
+      <span style="color:var(--purple)">👻 ${ghostsLeft}</span>
+    </div>
+    <div style="padding-bottom:80px">${content}</div>
+    <div class="bottom-bar">${bottomBtns}</div>
+    ${winOverlay}${confirmOverlay}`;
+}
+
+function confirmPhase(action, msg) { setState({showConfirm:{msg,action}}); }
+
+function goDay() {
+  const undoEntry = {gs:deepCopy(state.gs), tab:state.tab, nightStep:state.nightStep};
+  const gs = deepCopy(state.gs);
+  gs.phase = "day";
+  gs.executedToday = null;
+  gs.nightKillDone = false; // CHANGE 4: reset for next night
+  const stack = [...state.undoStack, undoEntry].slice(-5);
+  setState({gs, nightStep:0, tab:"grimoire", undoStack:stack, showConfirm:null});
+}
+
+function goNight() {
+  const undoEntry = {gs:deepCopy(state.gs), tab:state.tab, nightStep:state.nightStep};
+  const gs = deepCopy(state.gs);
+  gs.phase = "night";
+  gs.dayNum += 1;
+  gs.isFirstNight = false;
+  gs.diedTonight = [];
+  gs.nightKillDone = false; // CHANGE 4
+  gs.players = gs.players.map(p => ({...p, protected: false}));
+  const stack = [...state.undoStack, undoEntry].slice(-5);
+  setState({gs, nightStep:0, tab:"grimoire", undoStack:stack, showConfirm:null});
+}
+
+function undoPhase() {
+  if (state.undoStack.length === 0) return;
+  const stack = [...state.undoStack];
+  const prev = stack.pop();
+  // Reset action locks so user can redo the phase
+  if (prev.gs.phase === "night") {
+    prev.gs.nightKillDone = false;
+    prev.gs.diedTonight.forEach(idx => {
+      prev.gs.players[idx].alive = true;
+      prev.gs.players[idx].ghostVote = false;
+      prev.gs.players[idx].ghostUsed = false;
+    });
+    prev.gs.diedTonight = [];
+  }
+  if (prev.gs.phase === "day") {
+    if (prev.gs.executedToday !== null) {
+      const idx = prev.gs.executedToday;
+      prev.gs.players[idx].alive = true;
+      prev.gs.players[idx].ghostVote = false;
+      prev.gs.players[idx].ghostUsed = false;
+    }
+    prev.gs.executedToday = null;
+  }
+  setState({gs:prev.gs, tab:prev.tab, nightStep:prev.nightStep, undoStack:stack, expandedPlayer:-1});
+}
+
+// ── GRIMOIRE TAB ─────────────────────────────────────────────────────
+function renderGrimoire() {
+  const gs = state.gs;
+  const isNight = gs.phase === "night";
+  const isDay = gs.phase === "day";
+
+  let html = `<div style="padding:12px">
+    <div class="card" style="border-color:rgba(231,76,60,0.2);background:rgba(90,26,26,0.15);font-size:12px;margin-bottom:12px">
+      <span style="font-weight:600;color:var(--red)">🃏 Demon Bluffs: </span>
+      ${gs.bluffs.map(b=>C[b]?.name||b).join(", ")}
+      ${gs.redHerring >= 0 ? `<br><span style="font-weight:600;color:var(--orange)">🎯 Red Herring: </span>${gs.players[gs.redHerring]?.name} (Seat ${gs.redHerring+1})` : ""}
+    </div>`;
+
+  // CHANGE 4: "No death tonight" action button for other nights
+  if (isNight && !gs.isFirstNight && !gs.nightKillDone && gs.diedTonight.length === 0) {
+    html += `<button class="btn" style="margin-bottom:12px;padding:8px;background:rgba(255,255,255,0.03);border:1px dashed rgba(39,174,96,0.3);color:var(--text3);font-size:12px" onclick="markNoDeath()">🛡️ Tap here if Imp's kill was blocked (Soldier/Monk) → no death</button>`;
+  }
+  if (gs.nightKillDone && isNight) {
+    html += `<div style="margin-bottom:12px;padding:8px;border-radius:8px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);font-size:12px;color:var(--red)">💀 Night kill resolved${gs.diedTonight.length===0?" (blocked — no death)":" — "+gs.players.filter((_,i)=>gs.diedTonight.includes(i)).map(p=>p.name).join(", ")}</div>`;
+  }
+
+  gs.players.forEach((p, i) => {
+    const ch = C[p.actual];
+    const bch = C[p.believed];
+    const clr = TYPE_CLR[ch?.type||"townsfolk"];
+    const isDrunk = p.actual === "drunk";
+    const isExp = state.expandedPlayer === i;
+
+    let badges = "";
+    if (p.poisoned) badges += '<span style="font-size:14px">☠️</span>';
+    if (p.protected) badges += '<span style="font-size:14px">🛡️</span>';
+
+    let expanded = "";
+    if (isExp) {
+      const abilityText = isDrunk
+        ? `<strong style="color:var(--teal)">ACTUAL:</strong> ${esc(ch.ab)}<br><strong style="color:var(--blue)">BELIEVES (${bch?.name}):</strong> ${esc(bch?.ab||"")}`
+        : esc(ch?.ab||"");
+
+      // CHANGE 5: Phase-locked actions
+      let actions = "";
+      if (p.alive) {
+        // Kill: only at night, NOT first night, NOT already killed someone (CHANGE 4 + 5)
+        if (isNight && !gs.isFirstNight && !gs.nightKillDone) {
+          actions += `<button class="btn-sm" style="background:rgba(231,76,60,0.12);color:var(--red)" onclick="killPlayer(${i})">💀 Kill (Night)</button>`;
+        }
+        // Execute: only during day, max 1 per day (CHANGE 5)
+        if (isDay && gs.executedToday === null) {
+          actions += `<button class="btn-sm" style="background:rgba(230,126,34,0.12);color:var(--orange)" onclick="executePlayer(${i})">⚖️ Execute</button>`;
+        }
+        // Poison & Protect always available (ST tools)
+        actions += `<button class="btn-sm" style="background:${p.poisoned?"rgba(39,174,96,0.12)":"rgba(155,89,182,0.12)"};color:${p.poisoned?"var(--green)":"var(--purple)"}" onclick="togglePoison(${i})">${p.poisoned?"💊 Unpoison":"☠️ Poison"}</button>`;
+        actions += `<button class="btn-sm" style="background:${p.protected?"rgba(39,174,96,0.12)":"rgba(41,128,185,0.12)"};color:${p.protected?"var(--green)":"var(--blue)"}" onclick="toggleProtect(${i})">${p.protected?"🛡️ Unprotect":"🛡️ Protect"}</button>`;
+      } else {
+        actions = `<button class="btn-sm" style="background:rgba(39,174,96,0.12);color:var(--green)" onclick="revivePlayer(${i})">✨ Revive</button>`;
+        if (p.ghostVote && !p.ghostUsed) {
+          actions += `<button class="btn-sm" style="background:rgba(155,89,182,0.12);color:var(--purple)" onclick="useGhost(${i})">👻 Use Ghost Vote</button>`;
+        }
+      }
+
+      // CHANGE 3: No more "change role" dropdown — handled automatically
+
+      expanded = `<div class="player-expand">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:10px;padding:6px 8px;background:rgba(0,0,0,0.2);border-radius:6px;line-height:1.4">${abilityText}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${actions}</div>
+        <textarea class="input" style="font-size:11px;min-height:36px;resize:vertical" placeholder="Notes..." oninput="updateNotes(${i},this.value)">${esc(p.notes)}</textarea>
+      </div>`;
+    }
+
+    html += `<div class="player-row" style="border-color:${p.alive?clr.bdr+"44":"#222"};background:${p.alive?clr.bg+"44":"rgba(20,20,20,0.5)"};opacity:${p.alive?1:0.55}">
+      <div class="player-main" onclick="setState({expandedPlayer:${isExp?-1:i}})">
+        <span class="seat-num" style="background:${p.alive?clr.bdr:"#444"}">${i+1}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:14px;color:${p.alive?"var(--text)":"#666"};${p.alive?"":"text-decoration:line-through"}">
+            ${esc(p.name)}${!p.alive&&p.ghostVote&&!p.ghostUsed?" 👻":""}${p.ghostUsed?" 💀":""}
+          </div>
+          <div style="font-size:11px;color:${clr.txt};margin-top:1px">
+            ${isDrunk?`🍺 DRUNK (thinks: ${bch?.name||p.believed})`:(ch?.name||p.actual)}
+            <span style="color:var(--text3);margin-left:6px">${TEMOJI[ch?.type||"townsfolk"]} ${ch?.type||""}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">${badges}</div>
+        <span style="color:var(--text3);font-size:14px">${isExp?"▲":"▼"}</span>
+      </div>
+      ${expanded}
+    </div>`;
+  });
+
+  html += "</div>";
+  return html;
+}
+
+// ── PLAYER ACTIONS ───────────────────────────────────────────────────
+function killPlayer(i) {
+  const gs = deepCopy(state.gs);
+  const p = gs.players[i];
+
+  // CHANGE 3: Imp starpass — if the killed player IS the Imp (self-kill)
+  if (p.actual === "imp") {
+    gs.players[i].alive = false;
+    gs.players[i].ghostVote = true;
+    gs.diedTonight.push(i);
+    gs.nightKillDone = true; // CHANGE 4
+    gs.log.push(`Night ${gs.dayNum}: ${p.name} (Imp) killed themselves — STARPASS!`);
+    setState({gs, impStarpassPicker:true, impDyingIndex:i});
+    return;
+  }
+
+  gs.players[i].alive = false;
+  gs.players[i].ghostVote = true;
+  gs.diedTonight.push(i);
+  gs.nightKillDone = true; // CHANGE 4
+  gs.log.push(`Night ${gs.dayNum}: ${gs.players[i].name} killed (${C[gs.players[i].actual]?.name})`);
+  setState({gs});
+  checkWin();
+}
+
+function doImpStarpass(minionIdx) {
+  const gs = deepCopy(state.gs);
+  const minion = gs.players[minionIdx];
+  gs.log.push(`→ ${minion.name} (${C[minion.actual]?.name}) is now the Imp!`);
+  gs.players[minionIdx].actual = "imp";
+  gs.players[minionIdx].believed = "imp";
+  setState({gs, impStarpassPicker:false, impDyingIndex:-1});
+}
+
+function markNoDeath() {
+  const gs = deepCopy(state.gs);
+  gs.nightKillDone = true;
+  gs.log.push(`Night ${gs.dayNum}: No death (kill blocked by Soldier/Monk).`);
+  setState({gs});
+}
+
+function killFromNightWalker(i) {
+  // Same as killPlayer but stays on night walker tab
+  const gs = deepCopy(state.gs);
+  const p = gs.players[i];
+
+  if (p.actual === "imp") {
+    gs.players[i].alive = false;
+    gs.players[i].ghostVote = true;
+    gs.diedTonight.push(i);
+    gs.nightKillDone = true;
+    gs.log.push(`Night ${gs.dayNum}: ${p.name} (Imp) killed themselves — STARPASS!`);
+    setState({gs, impStarpassPicker:true, impDyingIndex:i});
+    return;
+  }
+
+  gs.players[i].alive = false;
+  gs.players[i].ghostVote = true;
+  gs.diedTonight.push(i);
+  gs.nightKillDone = true;
+  gs.log.push(`Night ${gs.dayNum}: ${gs.players[i].name} killed (${C[gs.players[i].actual]?.name})`);
+  setState({gs});
+  checkWin();
+}
+
+function executePlayer(i) {
+  const gs = deepCopy(state.gs);
+  const p = gs.players[i];
+
+  if (p.actual === "saint") {
+    gs.players[i].alive = false;
+    gs.players[i].ghostVote = true;
+    gs.executedToday = i;
+    gs.log.push(`Day ${gs.dayNum}: ${p.name} executed — SAINT EXECUTED!`);
+    setState({gs, winMsg:{team:"evil",reason:"The Saint was executed! Evil wins."}});
+    return;
+  }
+
+  gs.players[i].alive = false;
+  gs.players[i].ghostVote = true;
+  gs.executedToday = i;
+  gs.log.push(`Day ${gs.dayNum}: ${p.name} executed (${C[p.actual]?.name})`);
+
+  // CHANGE 3: Demon executed — auto-handle Scarlet Woman
+  if (C[p.actual]?.type === "demon") {
+    const aliveCount = gs.players.filter(pp=>pp.alive).length;
+    const sw = gs.players.find(pp=>pp.actual==="scarletwoman" && pp.alive);
+    if (sw && aliveCount >= 5) {
+      // Auto swap SW to Imp
+      const swIdx = gs.players.indexOf(sw);
+      gs.players[swIdx].actual = "imp";
+      gs.players[swIdx].believed = "imp";
+      gs.log.push(`→ Scarlet Woman (${sw.name}) is now the Imp! (${aliveCount} alive ≥ 5)`);
+      setState({gs});
+    } else {
+      setState({gs, winMsg:{team:"good",reason:`The Imp (${p.name}) has been executed!`}});
+    }
+  } else {
+    setState({gs});
+    checkWin();
+  }
+}
+
+function revivePlayer(i){const gs=deepCopy(state.gs);gs.players[i].alive=true;gs.players[i].ghostVote=false;gs.players[i].ghostUsed=false;if(gs.executedToday===i)gs.executedToday=null;if(gs.diedTonight.includes(i)){gs.diedTonight=gs.diedTonight.filter(x=>x!==i);gs.nightKillDone=false;}setState({gs});}
+function togglePoison(i){const gs=deepCopy(state.gs);gs.players[i].poisoned=!gs.players[i].poisoned;setState({gs});}
+function toggleProtect(i){const gs=deepCopy(state.gs);gs.players[i].protected=!gs.players[i].protected;setState({gs});}
+function useGhost(i){const gs=deepCopy(state.gs);gs.players[i].ghostUsed=true;gs.log.push(`${gs.players[i].name} used their ghost vote.`);setState({gs});}
+function updateNotes(i, val){state.gs.players[i].notes=val;}
+
+function checkWin() {
+  const gs = state.gs;
+  const alive = gs.players.filter(p=>p.alive);
+  if (alive.length <= 2) {
+    const demonAlive = alive.find(p=>C[p.actual]?.type==="demon");
+    if (demonAlive) {
+      setState({winMsg:{team:"evil",reason:`Only ${alive.length} players remain. The Demon (${demonAlive.name}) survives!`}});
+      return;
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// AUTO-CALCULATIONS (Empath, Chef, info helpers)
+// ══════════════════════════════════════════════════════════════════════════
+
+// Empath: count evil alive neighbors (skip dead, wrap circular)
+function calcEmpath(playerIdx) {
+  const gs = state.gs;
+  const n = gs.players.length;
+  let cwIdx = -1, ccwIdx = -1;
+
+  // Search clockwise for first alive neighbor
+  for (let d = 1; d < n; d++) {
+    const idx = (playerIdx + d) % n;
+    if (gs.players[idx].alive) { cwIdx = idx; break; }
+  }
+  // Search counter-clockwise for first alive neighbor
+  for (let d = 1; d < n; d++) {
+    const idx = (playerIdx - d + n) % n;
+    if (gs.players[idx].alive) { ccwIdx = idx; break; }
+  }
+
+  let evilCount = 0;
+  if (cwIdx >= 0 && C[gs.players[cwIdx].actual]?.team === "evil") evilCount++;
+  if (ccwIdx >= 0 && ccwIdx !== cwIdx && C[gs.players[ccwIdx].actual]?.team === "evil") evilCount++;
+  return evilCount;
+}
+
+// Chef: count pairs of adjacent evil players (circular seating, first night only)
+function calcChef() {
+  const gs = state.gs;
+  const n = gs.players.length;
+  let pairs = 0;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    if (C[gs.players[i].actual]?.team === "evil" && C[gs.players[j].actual]?.team === "evil") {
+      pairs++;
+    }
+  }
+  return pairs;
+}
+
+// Washerwoman helper: find who actually IS a Townsfolk (for true info)
+function calcWasherwomanInfo() {
+  const gs = state.gs;
+  // Each Townsfolk in play — list "Player X is the [Townsfolk]"
+  return gs.players.filter(p => {
+    if (p.actual === "drunk") return false; // Drunk is NOT actually a Townsfolk
+    return C[p.actual]?.type === "townsfolk";
+  }).map(p => ({idx:gs.players.indexOf(p), name:p.name, seat:p.seat, role:C[p.actual]?.name}));
+}
+
+// Librarian helper: find who actually IS an Outsider
+function calcLibrarianInfo() {
+  const gs = state.gs;
+  return gs.players.filter(p => {
+    // Drunk counts as Outsider for Librarian (they ARE an Outsider)
+    return C[p.actual]?.type === "outsider";
+  }).map(p => ({idx:gs.players.indexOf(p), name:p.name, seat:p.seat, role:C[p.actual]?.name}));
+}
+
+// Investigator helper: find who actually IS a Minion
+function calcInvestigatorInfo() {
+  const gs = state.gs;
+  return gs.players.filter(p => C[p.actual]?.type === "minion")
+    .map(p => ({idx:gs.players.indexOf(p), name:p.name, seat:p.seat, role:C[p.actual]?.name}));
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CHANGE 2: SHOW CARD HELPER
+// ══════════════════════════════════════════════════════════════════════════
+function showCharCard(charId) {
+  const ch = C[charId]; if(!ch) return;
+  const clr = TYPE_CLR[ch.type];
+  setState({showCard:{
+    emoji: TEMOJI[ch.type],
+    title: ch.name,
+    subtitle: ch.type.toUpperCase(),
+    text: ch.ab,
+    bg: `linear-gradient(135deg,#0d0d1a,${clr.bg})`,
+    color: clr.txt,
+    borderColor: clr.bdr,
+  }});
+}
+function showNumberCard(num) {
+  setState({showCard:{
+    emoji: ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣"][num] || "🔢",
+    title: String(num),
+    fontSize: 72,
+    bg: "#0d0d1a",
+    color: "#fff",
+    borderColor: "#4a4a8a",
+  }});
+}
+function showYesNo(yes) {
+  setState({showCard:{
+    emoji: yes ? "✅" : "❌",
+    title: yes ? "YES" : "NO",
+    subtitle: yes ? "One of them IS the Demon (or Red Herring)" : "Neither is the Demon",
+    fontSize: 48,
+    bg: yes ? "#0e2e0e" : "#2e0e0e",
+    color: yes ? "#4ade80" : "#ef4444",
+    borderColor: yes ? "#22c55e" : "#dc2626",
+  }});
+}
+function showThisIsCard(roleName, subtitle) {
+  const ch = C[Object.keys(C).find(k=>C[k].name===roleName)] || null;
+  const clr = ch ? TYPE_CLR[ch.type] : TYPE_CLR.demon;
+  setState({showCard:{
+    emoji: ch ? TEMOJI[ch.type] : "👹",
+    title: roleName,
+    subtitle: subtitle || "YOU ARE",
+    text: ch ? ch.ab : "",
+    bg: `linear-gradient(135deg,#0d0d1a,${clr.bg})`,
+    color: clr.txt,
+    borderColor: clr.bdr,
+  }});
+}
+
+// Build the interactive "show" buttons for a night step
+function renderStepShowCards(step) {
+  if (!step || !step.showType) return "";
+  let html = `<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
+    <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">📋 Show to Player</div>`;
+
+  switch(step.showType) {
+    case "number": {
+      html += `<div class="choice-grid">`;
+      const max = step.maxNum || 3;
+      for(let n=0;n<=max;n++) {
+        html += `<button class="choice-btn" onclick="showNumberCard(${n})">${n}</button>`;
+      }
+      html += `</div>`;
+      break;
+    }
+    case "yesno": {
+      html += `<div class="choice-grid">
+        <button class="choice-btn" style="flex:1;color:#4ade80;border-color:#22c55e" onclick="showYesNo(true)">✅ YES</button>
+        <button class="choice-btn" style="flex:1;color:#ef4444;border-color:#dc2626" onclick="showYesNo(false)">❌ NO</button>
+      </div>`;
+      break;
+    }
+    case "character_pick": {
+      const chars = step.pickFrom || [];
+      chars.forEach(id => {
+        const ch = C[id]; if(!ch) return;
+        const clr = TYPE_CLR[ch.type];
+        html += `<button class="char-choice-btn" style="margin-bottom:4px;border-color:${clr.bdr}44;color:${clr.txt}" onclick="showCharCard('${id}')">
+          ${TEMOJI[ch.type]} ${ch.name} <span style="color:var(--text3);font-size:11px">— ${ch.type}</span>
+        </button>`;
+      });
+      break;
+    }
+    case "auto_character": {
+      const ch = C[step.autoCharId]; if(!ch) break;
+      const clr = TYPE_CLR[ch.type];
+      html += `<button class="char-choice-btn" style="border-color:${clr.bdr};color:${clr.txt};font-size:14px;text-align:center;padding:12px" onclick="showCharCard('${step.autoCharId}')">
+        ${TEMOJI[ch.type]} Show: <strong>${ch.name}</strong>
+      </button>`;
+      break;
+    }
+    case "player_pick": {
+      const gs = state.gs;
+      gs.players.forEach((p,idx) => {
+        const ch = C[p.actual];
+        const clr = TYPE_CLR[ch?.type||"townsfolk"];
+        html += `<button class="char-choice-btn" style="margin-bottom:3px;border-color:${clr.bdr}44" onclick="showCharCard('${p.actual}')">
+          <span style="color:var(--text3)">${idx+1}.</span> ${esc(p.name)} <span style="color:${clr.txt};font-size:11px">(${ch?.name})</span>
+        </button>`;
+      });
+      break;
+    }
+    case "bluffs": {
+      html += `<div style="font-size:12px;color:var(--text2);margin-bottom:6px">Tap each to show:</div>`;
+      (step.bluffIds||[]).forEach(id => {
+        const ch = C[id]; if(!ch) return;
+        const clr = TYPE_CLR[ch.type];
+        html += `<button class="char-choice-btn" style="margin-bottom:4px;border-color:${clr.bdr}44;color:${clr.txt}" onclick="showCharCard('${id}')">
+          ${TEMOJI[ch.type]} ${ch.name}
+        </button>`;
+      });
+      break;
+    }
+    case "grimoire": {
+      html += `<button class="char-choice-btn" style="text-align:center;border-color:var(--indigo);color:var(--indigo);font-size:14px;padding:12px" onclick="setState({tab:'grimoire'})">📖 Open Grimoire (show Spy your screen)</button>`;
+      break;
+    }
+    case "you_are": {
+      html += `<button class="char-choice-btn" style="text-align:center;border-color:${TYPE_CLR.demon.bdr};color:${TYPE_CLR.demon.txt};font-size:14px;padding:12px" onclick="showThisIsCard('Imp','YOU ARE NOW THE')">
+        👹 Show: "You are the Imp"
+      </button>`;
+      break;
+    }
+    case "imp_kill": {
+      const gs = state.gs;
+      if (gs.nightKillDone) {
+        html += `<div style="padding:10px;border-radius:8px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:var(--red);font-size:13px;font-weight:600">
+          💀 Kill resolved${gs.diedTonight.length===0?" (blocked — no death)":" — "+gs.players.filter((_,i)=>gs.diedTonight.includes(i)).map(p=>p.name).join(", ")}
+        </div>`;
+      } else {
+        html += `<div style="font-size:12px;color:var(--text2);margin-bottom:6px">Imp points to a player — tap to kill:</div>`;
+        gs.players.forEach((p,idx) => {
+          if (!p.alive) return;
+          const ch = C[p.actual];
+          const clr = TYPE_CLR[ch?.type||"townsfolk"];
+          const isSoldier = p.actual==="soldier";
+          const isProtected = p.protected;
+          const isImp = ch?.type==="demon";
+          let badge = "";
+          if (isSoldier) badge = ' <span style="color:var(--orange);font-size:10px">⚔️ SOLDIER</span>';
+          if (isProtected) badge = ' <span style="color:var(--blue);font-size:10px">🛡️ PROTECTED</span>';
+          if (isImp) badge = ' <span style="color:var(--red);font-size:10px">👹 SELF = STARPASS</span>';
+          html += `<button class="char-choice-btn" style="margin-bottom:3px;border-color:${clr.bdr}44;display:flex;justify-content:space-between;align-items:center" onclick="killFromNightWalker(${idx})">
+            <span><span style="color:var(--text3)">${idx+1}.</span> ${esc(p.name)} <span style="color:${clr.txt};font-size:11px">(${ch?.name})</span>${badge}</span>
+            <span style="color:var(--red);font-size:13px">💀</span>
+          </button>`;
+        });
+        html += `<button class="char-choice-btn" style="margin-top:4px;text-align:center;border-color:rgba(39,174,96,0.3);color:var(--green);font-style:italic" onclick="markNoDeath()">
+          🛡️ No death (blocked by Soldier/Monk)
+        </button>`;
+      }
+      break;
+    }
+  }
+  html += `</div>`;
+  return html;
+}
+
+// ── NIGHT WALKER TAB ─────────────────────────────────────────────────
+function buildNightSteps() {
+  const gs = state.gs;
+  const steps = [];
+  const isFirst = gs.isFirstNight;
+
+  const findAlive = (roleId) => gs.players.map((p,i)=>({...p,i})).filter(p=>p.alive && p.actual===roleId);
+  const findDrunkAs = (roleId) => gs.players.map((p,i)=>({...p,i})).filter(p=>p.alive && p.actual==="drunk" && p.believed===roleId);
+
+  if (isFirst) {
+    if (gs.players.length >= 7) {
+      const minions = gs.players.filter(p=>C[p.actual]?.type==="minion");
+      const demon = gs.players.find(p=>C[p.actual]?.type==="demon");
+      steps.push({
+        title:"🤝 Minion Info", type:"info",
+        instr:`Wake ALL Minions together${minions.length>1?" so they can see each other":""}. Show them "This is the Demon" — point to <strong>${demon?.name||"?"}</strong>.`,
+        who: minions.map(m=>`${m.name} (${C[m.actual]?.name})`).join(", "),
+      });
+      steps.push({
+        title:"😈 Demon Info", type:"evil",
+        instr:`Wake the Demon. Show "These are your Minions" — point to each Minion. Then show 3 not-in-play good characters as bluffs.`,
+        who: `${demon?.name||"?"} (Imp)`,
+        extra: `Bluffs: <strong>${gs.bluffs.map(b=>C[b]?.name||b).join(", ")}</strong>`,
+        showType: "bluffs", bluffIds: gs.bluffs, // CHANGE 2
+      });
+    }
+
+    FIRST_NIGHT.forEach(entry => {
+      if(entry.id.startsWith("_")) return;
+      const ch = C[entry.id]; if(!ch) return;
+      const direct = findAlive(entry.id);
+      const drunk = findDrunkAs(entry.id);
+      [...direct,...drunk].forEach(p => {
+        const isDrunk = p.actual === "drunk";
+        const step = {
+          title: `${TEMOJI[ch.type]} ${ch.name}`,
+          type: ch.team==="evil"?"evil":"good",
+          instr: ch.fn_r,
+          who: `${p.name} (Seat ${p.i+1})`,
+          warn: isDrunk ? "⚠️ THIS IS THE DRUNK — give FALSE or misleading info!" : (p.poisoned ? "⚠️ POISONED — give FALSE or misleading info!" : null),
+        };
+        // CHANGE 2: Add show card types + AUTO-CALC hints
+        if (entry.id==="chef") {
+          step.showType="number"; step.maxNum=3;
+          const trueCount = calcChef();
+          step.stHint = `🧮 TRUE answer: <strong>${trueCount}</strong> evil pair${trueCount!==1?"s":""}`;
+          if (isDrunk || p.poisoned) step.stHint += `<br>⚠️ Drunk/Poisoned — give any WRONG number instead!`;
+        }
+        if (entry.id==="empath") {
+          step.showType="number"; step.maxNum=2;
+          const trueCount = calcEmpath(p.i);
+          step.stHint = `🧮 TRUE answer: <strong>${trueCount}</strong> evil alive neighbor${trueCount!==1?"s":""}`;
+          if (isDrunk || p.poisoned) step.stHint += `<br>⚠️ Drunk/Poisoned — give any WRONG number instead!`;
+        }
+        if (entry.id==="fortuneteller") {
+          step.showType="yesno";
+          const rh = gs.redHerring >= 0 ? gs.players[gs.redHerring] : null;
+          step.stHint = rh
+            ? `🎯 Red Herring: <strong>${rh.name}</strong> (Seat ${gs.redHerring+1}) — always registers as Demon`
+            : `🎯 No Red Herring set`;
+          if (isDrunk || p.poisoned) step.stHint += `<br>⚠️ Drunk/Poisoned — answer can be anything!`;
+        }
+        if (entry.id==="washerwoman") {
+          step.showType="character_pick"; step.pickFrom=Object.values(C).filter(c=>c.type==="townsfolk").map(c=>c.id);
+          const info = calcWasherwomanInfo();
+          step.stHint = `📋 TRUE info (pick one):<br>` + info.map(x =>
+            `• <strong>${x.name}</strong> (Seat ${x.seat}) IS the <strong>${x.role}</strong>`
+          ).join("<br>");
+          step.stHint += `<br><em style="color:var(--text3)">Show this player + 1 wrong player + the character token.</em>`;
+          if (isDrunk || p.poisoned) step.stHint += `<br>⚠️ Drunk/Poisoned — show any 2 players + any Townsfolk token (all can be wrong)!`;
+        }
+        if (entry.id==="librarian") {
+          step.showType="character_pick"; step.pickFrom=[...Object.values(C).filter(c=>c.type==="outsider").map(c=>c.id)];
+          const info = calcLibrarianInfo();
+          if (info.length === 0) {
+            step.stHint = `📋 TRUE info: No Outsiders in play — show a <strong>0</strong>`;
+          } else {
+            step.stHint = `📋 TRUE info (pick one):<br>` + info.map(x =>
+              `• <strong>${x.name}</strong> (Seat ${x.seat}) IS the <strong>${x.role}</strong>`
+            ).join("<br>");
+            step.stHint += `<br><em style="color:var(--text3)">Show this player + 1 wrong player + the character token.</em>`;
+          }
+          if (isDrunk || p.poisoned) step.stHint += `<br>⚠️ Drunk/Poisoned — show any 2 players + any Outsider token, or falsely show 0!`;
+        }
+        if (entry.id==="investigator") {
+          step.showType="character_pick"; step.pickFrom=Object.values(C).filter(c=>c.type==="minion").map(c=>c.id);
+          const info = calcInvestigatorInfo();
+          step.stHint = `📋 TRUE info (pick one):<br>` + info.map(x =>
+            `• <strong>${x.name}</strong> (Seat ${x.seat}) IS the <strong>${x.role}</strong>`
+          ).join("<br>");
+          step.stHint += `<br><em style="color:var(--text3)">Show this player + 1 wrong player + the character token.</em>`;
+          if (isDrunk || p.poisoned) step.stHint += `<br>⚠️ Drunk/Poisoned — show any 2 players + any Minion token (all can be wrong)!`;
+        }
+        if (entry.id==="spy")           { step.showType="grimoire"; }
+        steps.push(step);
+      });
+    });
+  } else {
+    OTHER_NIGHT.forEach(entry => {
+      const ch = C[entry.id]; if(!ch) return;
+
+      if (entry.id === "scarletwoman") {
+        if (gs.executedToday !== null) {
+          const exPlayer = gs.players[gs.executedToday];
+          if (C[exPlayer.actual]?.type === "demon") {
+            const aliveCount = gs.players.filter(p=>p.alive).length;
+            const sw = findAlive("scarletwoman");
+            if (sw.length > 0 && aliveCount >= 5) {
+              steps.push({
+                title: `${TEMOJI[ch.type]} ${ch.name}`, type:"evil",
+                instr: ch.on_r,
+                who: `${sw[0].name} (Seat ${sw[0].i+1})`,
+                warn: `The Demon (${exPlayer.name}) was executed today with ${aliveCount} alive. Scarlet Woman becomes the Imp!`,
+                showType: "you_are", // CHANGE 2
+              });
+            }
+          }
+        }
+        return;
+      }
+
+      if (entry.id === "ravenkeeper") {
+        const allRK = [...gs.players.map((p,i)=>({...p,i})).filter(p=>p.actual==="ravenkeeper"),
+                       ...gs.players.map((p,i)=>({...p,i})).filter(p=>p.actual==="drunk"&&p.believed==="ravenkeeper")];
+        allRK.forEach(p => {
+          if (gs.diedTonight.includes(p.i)) {
+            steps.push({
+              title: `${TEMOJI[ch.type]} ${ch.name}`, type:"good",
+              instr: ch.on_r,
+              who: `${p.name} (Seat ${p.i+1})`,
+              warn: p.actual==="drunk" ? "⚠️ DRUNK — show any character token (misinformation)!" : (p.poisoned ? "⚠️ POISONED — show any token!" : null),
+              condition: "⚰️ Died tonight — wake to use their ability",
+              showType: "player_pick", // CHANGE 2
+            });
+          }
+        });
+        return;
+      }
+
+      if (entry.id === "undertaker" && gs.executedToday === null) return;
+
+      const direct = findAlive(entry.id);
+      const drunk = findDrunkAs(entry.id);
+      [...direct,...drunk].forEach(p => {
+        const isDrunk = p.actual === "drunk";
+        let extra = null;
+        const step = {
+          title: `${TEMOJI[ch.type]} ${ch.name}`,
+          type: ch.team==="evil"?"evil":"good",
+          instr: ch.on_r,
+          who: `${p.name} (Seat ${p.i+1})`,
+          warn: isDrunk ? "⚠️ DRUNK — give FALSE or misleading info!" : (p.poisoned ? "⚠️ POISONED — give FALSE or misleading info!" : null),
+        };
+
+        if (entry.id === "undertaker" && gs.executedToday !== null) {
+          const ex = gs.players[gs.executedToday];
+          step.extra = `Executed today: <strong>${ex.name}</strong> — show the <strong>${C[ex.actual]?.name||ex.actual}</strong> token.`;
+          step.showType = "auto_character"; step.autoCharId = ex.actual; // CHANGE 2
+        }
+
+        if (entry.id === "imp") {
+          const soldier = gs.players.find(pp=>pp.alive&&pp.actual==="soldier");
+          const protectedP = gs.players.filter(pp=>pp.alive&&pp.protected);
+          let impNotes = [];
+          if (soldier) impNotes.push(`⚔️ ${soldier.name} is the SOLDIER — cannot be killed by Demon`);
+          protectedP.forEach(pp => impNotes.push(`🛡️ ${pp.name} is PROTECTED by Monk tonight`));
+          if (impNotes.length) step.extra = impNotes.join("<br>");
+          step.showType = "imp_kill"; // Kill buttons right on the step
+        }
+
+        if (entry.id==="empath") {
+          step.showType="number"; step.maxNum=2;
+          const trueCount = calcEmpath(p.i);
+          step.stHint = `🧮 TRUE answer: <strong>${trueCount}</strong> evil alive neighbor${trueCount!==1?"s":""}`;
+          if (isDrunk || p.poisoned) step.stHint += `<br>⚠️ Drunk/Poisoned — give any WRONG number instead!`;
+        }
+        if (entry.id==="fortuneteller") {
+          step.showType="yesno";
+          const rh = gs.redHerring >= 0 ? gs.players[gs.redHerring] : null;
+          step.stHint = rh
+            ? `🎯 Red Herring: <strong>${rh.name}</strong> (Seat ${gs.redHerring+1}) — always registers as Demon`
+            : `🎯 No Red Herring set`;
+          if (isDrunk || p.poisoned) step.stHint += `<br>⚠️ Drunk/Poisoned — answer can be anything!`;
+        }
+        if (entry.id==="spy")           { step.showType="grimoire"; }
+
+        steps.push(step);
+      });
+    });
+  }
+  return steps;
+}
+
+function renderNightWalker() {
+  const steps = buildNightSteps();
+  const cur = state.nightStep;
+  const step = steps[cur];
+
+  let progress = `<div style="height:3px;background:#222;border-radius:2px;margin-bottom:16px;overflow:hidden">
+    <div style="height:100%;width:${((cur+1)/Math.max(steps.length,1))*100}%;background:linear-gradient(90deg,#4a4a8a,#8888dd);border-radius:2px;transition:width 0.3s"></div>
+  </div>`;
+
+  let stepCard = "";
+  if (step) {
+    const bgc = step.type==="evil"?"rgba(90,26,26,0.2)":step.type==="info"?"rgba(26,26,90,0.2)":"rgba(26,58,92,0.2)";
+    const bdc = step.type==="evil"?"#c0392b44":step.type==="info"?"#4a4a8a":"#2980b944";
+    const ttc = step.type==="evil"?"var(--red)":step.type==="info"?"var(--indigo)":"var(--blue)";
+
+    stepCard = `<div class="night-step fade-in" style="background:${bgc};border:1px solid ${bdc}">
+      <h4 style="font-size:18px;color:${ttc};margin-bottom:8px">${step.title}</h4>
+      <div style="font-size:13px;color:#ccc;padding:8px;background:rgba(0,0,0,0.2);border-radius:8px;margin-bottom:8px">
+        <strong style="color:var(--orange)">PLAYER:</strong> ${step.who}
+      </div>
+      <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:4px">${step.instr}</div>
+      ${step.extra?`<div class="warn warn-orange" style="margin-top:8px">${step.extra}</div>`:""}
+      ${step.warn?`<div class="warn warn-red" style="margin-top:8px">${step.warn}</div>`:""}
+      ${step.stHint?`<div style="margin-top:10px;padding:8px 10px;border-radius:8px;background:rgba(93,173,226,0.08);border:1px solid rgba(93,173,226,0.2);font-size:12px;line-height:1.6;color:var(--blue)">
+        <span style="font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);display:block;margin-bottom:4px">🔒 ST EYES ONLY</span>
+        ${step.stHint}
+      </div>`:""}
+      ${step.condition?`<div style="font-size:11px;color:var(--text2);margin-top:6px;font-style:italic">ℹ️ ${step.condition}</div>`:""}
+      ${renderStepShowCards(step)}
+    </div>`;
+  } else {
+    stepCard = `<div style="text-align:center;padding:40px 20px;color:var(--text3)">
+      <div style="font-size:40px;margin-bottom:12px">🌅</div>
+      <div style="font-size:14px">Night phase complete. Advance to day when ready.</div>
+    </div>`;
+  }
+
+  let nav = `<div style="display:flex;gap:8px;margin-bottom:20px">
+    <button class="btn" style="flex:1;padding:10px;background:${cur===0?"#1a1a1a":"#222"};color:${cur===0?"#444":"#aaa"};border:1px solid #333;font-size:13px" ${cur===0?"disabled":""} onclick="setState({nightStep:${Math.max(0,cur-1)}})">← Prev</button>
+    ${cur < steps.length-1
+      ? `<button class="btn btn-night" style="flex:1;padding:10px;font-size:13px" onclick="setState({nightStep:${cur+1}})">Next →</button>`
+      : `<button class="btn btn-day" style="flex:1;padding:10px;font-size:13px" onclick="confirmPhase('goDay','Advance to Day? Make sure all night steps are complete.')">☀️ Dawn</button>`
+    }
+  </div>`;
+
+  let stepList = '<div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:6px">All Night Steps:</div>';
+  steps.forEach((s,i) => {
+    const active = i===cur;
+    stepList += `<div onclick="setState({nightStep:${i}})" style="padding:5px 10px;margin-bottom:2px;border-radius:6px;cursor:pointer;font-size:12px;display:flex;justify-content:space-between;
+      background:${active?"rgba(136,136,221,0.12)":"transparent"};
+      border-left:3px solid ${active?"var(--indigo)":"transparent"};
+      color:${i<cur?"var(--text3)":active?"var(--indigo)":"var(--text2)"}">
+      <span>${i<cur?"✓ ":""}${s.title}</span>
+      <span style="color:var(--text3)">${(s.who||"").split("(")[0].trim()}</span>
+    </div>`;
+  });
+
+  return `<div style="padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="font-size:16px;color:var(--indigo)">🌙 ${state.gs.isFirstNight?"First Night":`Night ${state.gs.dayNum}`}</h3>
+      <span style="font-size:12px;color:var(--text3)">Step ${cur+1}/${steps.length}</span>
+    </div>
+    ${progress}${stepCard}${nav}${stepList}
+  </div>`;
+}
+
+// ── ROLES TAB ────────────────────────────────────────────────────────
+function renderRolesRef() {
+  const gs = state.gs;
+  let html = '<div style="padding:16px">';
+  html += `<h3 style="font-size:16px;color:var(--red);margin-bottom:8px">🎭 Role Cards</h3>
+    <div class="card" style="border-color:rgba(41,128,185,0.2);background:rgba(41,128,185,0.08);font-size:12px;color:var(--blue);margin-bottom:16px">
+      💡 Tap a player to show them their role card privately. The Drunk sees their believed Townsfolk.
+    </div>`;
+
+  gs.players.forEach((p, i) => {
+    const ch = C[p.actual];
+    const bch = C[p.believed];
+    const showCh = p.actual==="drunk" ? bch : ch;
+    const clr = TYPE_CLR[showCh?.type || ch?.type || "townsfolk"];
+    html += `<div onclick="setState({showingRoleFor:${i}})" style="padding:10px 12px;margin-bottom:5px;border-radius:8px;border:1px solid ${clr.bdr}44;background:${clr.bg}44;cursor:pointer;display:flex;align-items:center;gap:8px">
+      <span class="seat-num" style="background:${clr.bdr}">${i+1}</span>
+      <span style="flex:1;font-weight:600;font-size:13px">${esc(p.name)}</span>
+      <span style="font-size:16px">${TEMOJI[showCh?.type||"townsfolk"]}</span>
+      <span style="color:var(--text3);font-size:12px">👁️ show</span>
+    </div>`;
+  });
+
+  html += '<h4 style="font-size:14px;color:var(--text2);margin:20px 0 10px">All Trouble Brewing Characters</h4>';
+  ["townsfolk","outsider","minion","demon"].forEach(type => {
+    const clr = TYPE_CLR[type];
+    html += `<div style="font-weight:600;font-size:12px;color:${clr.txt};margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">${TEMOJI[type]} ${type}s</div>`;
+    Object.values(C).filter(c=>c.type===type).forEach(c => {
+      html += `<div style="padding:6px 10px;margin-bottom:3px;border-radius:6px;background:rgba(255,255,255,0.02);font-size:11px;line-height:1.4">
+        <strong style="color:${clr.txt}">${c.name}:</strong> <span style="color:var(--text2)">${esc(c.ab)}</span>
+      </div>`;
+    });
+    html += '<div style="height:8px"></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+// ── LOG TAB ──────────────────────────────────────────────────────────
+function renderLog() {
+  const gs = state.gs;
+  let html = '<div style="padding:16px">';
+  html += '<h3 style="font-size:16px;color:var(--red);margin-bottom:12px">📝 Game Log</h3>';
+
+  if (gs.log.length === 0) {
+    html += '<div style="color:var(--text3);text-align:center;padding:20px">No events logged yet.</div>';
+  } else {
+    gs.log.forEach(entry => {
+      html += `<div style="padding:6px 10px;margin-bottom:4px;border-radius:6px;background:rgba(255,255,255,0.02);font-size:12px;color:var(--text2);border-left:3px solid rgba(231,76,60,0.3)">${esc(entry)}</div>`;
+    });
+  }
+
+  const alive = gs.players.filter(p=>p.alive);
+  const evilAlive = alive.filter(p=>C[p.actual]?.team==="evil");
+  const demon = gs.players.find(p=>C[p.actual]?.type==="demon");
+  const sw = gs.players.find(p=>p.actual==="scarletwoman");
+  const mayor = alive.find(p=>p.actual==="mayor");
+
+  html += `<div style="margin-top:20px;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px;font-size:12px;color:var(--text3);line-height:2">
+    <div style="font-weight:600;color:var(--text2);margin-bottom:4px">Game State Summary</div>
+    <div>Phase: ${gs.phase==="night"?"🌙 Night":"☀️ Day"} ${gs.dayNum}</div>
+    <div>Alive: ${alive.length} / ${gs.players.length}</div>
+    <div>Votes needed: <strong style="color:var(--orange)">${Math.ceil(alive.length/2)}</strong></div>
+    <div>Ghost votes left: ${gs.players.filter(p=>!p.alive&&p.ghostVote&&!p.ghostUsed).length}</div>
+    <hr style="border-color:#222;margin:8px 0">
+    <div>Evil alive: ${evilAlive.map(p=>`<span style="color:var(--red)">${esc(p.name)} (${C[p.actual]?.name})</span>`).join(", ")||"None"}</div>
+    <div>Demon: ${demon?`${esc(demon.name)} ${demon.alive?"✅ ALIVE":"❌ DEAD"}`:"-"}</div>
+    ${sw?`<div>Scarlet Woman: ${esc(sw.name)} ${sw.alive?"✅":"❌"} — ${alive.length>=5?"CAN become Demon":"Need 5+ alive"}</div>`:""}
+    ${mayor?`<div>⚠️ Mayor (${esc(mayor.name)}) alive — 3 alive + no execution = GOOD WINS</div>`:""}
+    <div>Poisoned: ${gs.players.filter(p=>p.poisoned).map(p=>`<span style="color:var(--purple)">${esc(p.name)}</span>`).join(", ")||"None"}</div>
+  </div></div>`;
+  return html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════════════════
+function esc(s){if(!s)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function deepCopy(o){return JSON.parse(JSON.stringify(o));}
+
+// ══════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════
+const saved = loadFromStorage();
+if (saved && saved._saved) { state.showResume = true; }
+render();
+</script>
+</body>
+</html>
